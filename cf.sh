@@ -451,7 +451,7 @@ file=$(echo $url | cut -f 2- -d'/')
 clear
 while true
 do
-echo " زحمت اینو چینیا کشیدن من فقط ترجمه کردم"
+echo "zahmatesh ro chinia keshidan man fqt tarjome kardam ★FALCONER★"
 	echo "1. IPV4 preferred (TLS)"
 	echo "2. IPV4 preferred"
 	echo "3. IPV6 preferred (TLS)"
