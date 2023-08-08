@@ -343,7 +343,7 @@ do
 			cat rtt/*.log > rtt.txt
 			status=0
 			echo "IP address to be tested"
-			cat rtt.txt | sort | awk '{print $2" 往返延迟 "$1" 毫秒"}'
+			cat rtt.txt | sort | awk '{print $2" round trip delay "$1" ms"}'
 			for i in `cat rtt.txt | sort | awk '{print $1"_"$2}'`
 			do
 				avgms=$(echo $i | awk -F_ '{print $1}')
