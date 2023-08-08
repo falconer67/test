@@ -1,77 +1,77 @@
-#!/bin/bash
+#!/ bin/bash
 # better-cloudflare-ip
 
 function bettercloudflareip(){
-read -p "Please set the expected bandwidth size (default minimum 1, unit Mbps):" bandwidth
-read -p "Please set the number of RTT test processes (default 10, maximum 50):" tasknum
+read-p "please set the desired size of the bandwidth(the default minimum 1,unit Mbps):" bandwidth
+read-p "please set the RTT Test number of processes(default: 10,max 50):" tasknum
 if [ -z "$bandwidth" ]
 then
-	bandwidth=1
-the fi
-if [ $bandwidth -eq 0 ]
+bandwidth=1
+fi
+if [ $bandwidth-eq 0 ]
 then
-	bandwidth=1
-the fi
+bandwidth=1
+fi
 if [ -z "$tasknum" ]
 then
-	tasknum=10
-the fi
-if [ $tasknum -eq 0 ]
+tasknum=10
+fi
+if [ $tasknum-eq 0 ]
 then
-	echo "The number of processes cannot be 0, it is automatically set to the default value"
-	tasknum=10
-the fi
-if [ $tasknum -gt 50 ]
+ echo "number of processes cannot be 0,is automatically set to the default value"
+tasknum=10
+fi
+if [ $tasknum-gt 50 ]
 then
-	echo "Exceeded the maximum process limit, automatically set to the maximum value"
-	tasknum=50
-the fi
+ echo "more than the maximum process limit,automatically set to the maximum value"
+tasknum=50
+fi
 speed=$[$bandwidth*128*1024]
 starttime=$(date +%s)
 cloudflaretest
 realbandwidth=$[$max/128]
 endtime=$(date +%s)
-echo "Get details from server"
+echo "from the server to obtain more information"
 unset temp
 if [ "$ips" == "ipv4" ]
 then
-	if [ $tls == 1 ]
-	then
-		temp=($(curl --resolve $domain:443:$anycast --retry 1 -s https://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
-	else
-		temp=($(curl -x $anycast:80 --retry 1 -s http://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
-	the fi
-else
-	if [ $tls == 1 ]
-	then
-		temp=($(curl --resolve $domain:443:$anycast --retry 1 -s https://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
-	else
-		temp=($(curl -x [$anycast]:80 --retry 1 -s http://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
-	the fi
-the fi
-if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | grep colo= | wc -l) == 0 ]
+ if [ $tls == 1 ]
 then
-	publicip=Get timed out
-	colo=get timeout
+ temp=($(curl --resolve $domain:443:$anycast --retry 1-s https://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
 else
-	publicip=$(echo ${temp[@]} | sed -e 's/ /\n/g' | grep ip= | cut -f 2- -d'=')
-	colo=$(grep -w "($(echo ${temp[@]} | sed -e 's/ /\n/g' | grep colo= | cut -f 2- -d'='))" colo.txt | awk -F"-" '{print $1}')
-the fi
+ temp=($(curl-x $anycast:80 --retry 1-s http://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
+fi
+else
+ if [ $tls == 1 ]
+then
+ temp=($(curl --resolve $domain:443:$anycast --retry 1-s https://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
+else
+ temp=($(curl-x [$anycast]:80 --retry 1-s http://$domain/cdn-cgi/trace --connect-timeout 2 --max-time 3))
+fi
+fi
+if [ $(echo ${temp[@]} | sed-e 's/ /\n/g' | grep colo= | wc-l) == 0 ]
+then
+publicip=get timeout
+colo=get timeout
+else
+ publicip=$(echo ${temp[@]} | sed-e 's/ /\n/g' | grep ip= | cut-f 2- -d'=')
+ colo=$(grep-w "($(echo ${temp[@]} | sed-e 's/ /\n/g' | grep colo= | cut-f 2- -d'='))" colo.txt | awk-F"-" '{print $1}')
+fi
 clear
-echo "Preferred IP $anycast"
-echo "Public IP $publicip"
+echo "preferred IP $anycast"
+echo "public IP $publicip"
 if [ $tls == 1 ]
 then
-	echo "Support port 443 2053 2083 2087 2096 8443"
+ echo "supports port 443 2053 2083 2087 2096 8443"
 else
-	echo "Support port 80 8080 8880 2052 2082 2086 2095"
-the fi
-echo "Set Bandwidth $bandwidth Mbps"
-echo "Measured bandwidth $realbandwidth Mbps"
-echo "peak speed $max kB/s"
-echo "Round trip delay $avgms milliseconds"
+ echo "support for Port 80 to 8080 8880 2052 2082 2086 2095"
+fi
+echo "set the bandwidth $bandwidth Mbps"
+echo "the measured bandwidth $realbandwidth Mbps"
+echo "peak velocity $max kB/s"
+echo "round-trip delay $avgms MS"
 echo "data center $colo"
-echo "Total time spent in $[$endtime-$starttime] seconds"
+echo "total time $[$endtime-$starttime] seconds"
 }
 
 function rtthttps(){
@@ -79,38 +79,38 @@ avgms=0
 n=1
 for ip in `cat rtt/$1.txt`
 do
-	while true
-	do
-		if [ $n -le 3 ]
-		then
-			rsp=$(curl --resolve $domain:443:$ip https://$domain/cdn-cgi/trace -o /dev/null -s --connect-timeout 1 --max-time 3 -w % {time_connect}_%{http_code})
-			if [ $(echo $rsp | awk -F_ '{print $2}') != 200 ]
-			then
-				avgms=0
-				n=1
-				break
-			else
-				avgms=$[$(echo $rsp | awk -F_ '{printf ("%d\n",$1*1000000)}')+$avgms]
-				n=$[$n+1]
-			the fi
-		else
-			avgms=$[$avgms/3000]
-			if [ $avgms -lt 10 ]
-			then
-				echo 00 $avgms $ip >> rtt/$1.log
-			elif [ $avgms -ge 10 ] && [ $avgms -lt 100 ]
-			then
-				echo 0 $avgms $ip >> rtt/$1.log
-			else
-				echo $avgms $ip >> rtt/$1.log
-			the fi
-			avgms=0
-			n=1
-			break
-		the fi
-	done
+ while true
+do
+ if [ $n-le 3 ]
+then
+ rsp=$(curl --resolve $domain:443:$ip: https://$domain/cdn-cgi/trace-o /dev/null-s --connect-timeout 1 --max-time 3-w %{time_connect}_%{http_code})
+ if [ $(echo $rsp | awk-F_ '{print $2}') != 200 ]
+then
+avgms=0
+n=1
+break
+else
+ avgms=$[$(echo $rsp | awk-F_ '{printf ("%d\n",$1*1000000)}')+$avgms]
+n=$[$n+1]
+fi
+else
+avgms=$[$avgms/3000]
+ if [ $avgms-lt 10 ]
+then
+ echo 00$avgms $ip >> rtt/$1. log
+ elif [ $avgms-ge 10 ] && [ $avgms-lt 100 ]
+then
+ echo 0$avgms $ip >> rtt/$1. log
+else
+ echo $avgms $ip >> rtt/$1. log
+fi
+avgms=0
+n=1
+break
+fi
 done
-rm -rf rtt/$1.txt
+done
+rm-rf rtt/$1.txt
 }
 
 function rtthttp(){
@@ -118,413 +118,414 @@ avgms=0
 n=1
 for ip in `cat rtt/$1.txt`
 do
-	while true
-	do
-		if [ $n -le 3 ]
-		then
-			if [ $(echo $ip | grep : | wc -l) == 0 ]
-			then
-				rsp=$(curl -x $ip:80 http://$domain/cdn-cgi/trace -o /dev/null -s --connect-timeout 1 --max-time 3 -w %{time_connect}_ %{http_code})
-			else
-				rsp=$(curl -x [$ip]:80 http://$domain/cdn-cgi/trace -o /dev/null -s --connect-timeout 1 --max-time 3 -w %{time_connect }_%{http_code})
-			the fi
-			if [ $(echo $rsp | awk -F_ '{print $2}') != 200 ]
-			then
-				avgms=0
-				n=1
-				break
-			else
-				avgms=$[$(echo $rsp | awk -F_ '{printf ("%d\n",$1*1000000)}')+$avgms]
-				n=$[$n+1]
-			the fi
-		else
-			avgms=$[$avgms/3000]
-			if [ $avgms -lt 10 ]
-			then
-				echo 00 $avgms $ip >> rtt/$1.log
-			elif [ $avgms -ge 10 ] && [ $avgms -lt 100 ]
-			then
-				echo 0 $avgms $ip >> rtt/$1.log
-			else
-				echo $avgms $ip >> rtt/$1.log
-			the fi
-			avgms=0
-			n=1
-			break
-		the fi
-	done
+ while true
+do
+ if [ $n-le 3 ]
+then
+ if [ $(echo $ip | grep : | wc-l) == 0 ]
+then
+ rsp=$(curl-x $ip:80 http://$domain/cdn-cgi/trace-o /dev/null-s --connect-timeout 1 --max-time 3-w %{time_connect}_%{http_code})
+else
+ rsp=$(curl-x [$ip]:80 http://$domain/cdn-cgi/trace-o /dev/null-s --connect-timeout 1 --max-time 3-w %{time_connect}_%{http_code})
+fi
+ if [ $(echo $rsp | awk-F_ '{print $2}') != 200 ]
+then
+avgms=0
+n=1
+break
+else
+ avgms=$[$(echo $rsp | awk-F_ '{printf ("%d\n",$1*1000000)}')+$avgms]
+n=$[$n+1]
+fi
+else
+avgms=$[$avgms/3000]
+ if [ $avgms-lt 10 ]
+then
+ echo 00$avgms $ip >> rtt/$1. log
+ elif [ $avgms-ge 10 ] && [ $avgms-lt 100 ]
+then
+ echo 0$avgms $ip >> rtt/$1. log
+else
+ echo $avgms $ip >> rtt/$1. log
+fi
+avgms=0
+n=1
+break
+fi
 done
-rm -rf rtt/$1.txt
+done
+rm-rf rtt/$1.txt
 }
 
 function speedtesthttps(){
-rm -rf log.txt speed.txt
-curl --resolve $domain:443:$1 https://$domain/$file -o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
-cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep -v 'k\|M' >> speed.txt
-for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep k | `
+rm-rf log.txt speed.txt
+curl --resolve $domain:443:$1 https://$domain/$file-o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
+cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep-v 'k\|M' >> speed.txt
+for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep k | sed 's/k//g"
 do
-	k=$i
-	k=$[$k*1024]
-	echo $k >> speed.txt
+k=$i
+k=$[$k*1024]
+ echo $k >> speed.txt
 done
-for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep M | `
+for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep M | sed 's/M//g"
 do
-	i=$(echo | awk '{print '$i'*10 }')
-	M=$i
-	M=$[$M*1024*1024/10]
-	echo $M >> speed.txt
+ i=$(echo | awk '{print '$i'*10 }')
+M=$i
+M=$[$M*1024*1024/10]
+ echo $M >> speed.txt
 done
 max=0
 for i in `cat speed.txt`
 do
-	if [ $i -ge $max ]
-	then
-		max=$i
-	the fi
+ if [ $i-ge $max ]
+then
+max=$i
+fi
 done
-rm -rf log.txt speed.txt
+rm-rf log.txt speed.txt
 echo $max
 }
 
 function speedtesthttp(){
-rm -rf log.txt speed.txt
-if [ $(echo $1 | grep : | wc -l) == 0 ]
+rm-rf log.txt speed.txt
+if [ $(echo $1 | grep : | wc-l) == 0 ]
 then
-	curl -x $1:80 http://$domain/$file -o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
+ curl-x $1:80 http://$domain/$file-o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
 else
-	curl -x [$1]:80 http://$domain/$file -o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
-the fi
-cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep -v 'k\|M' >> speed.txt
-for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep k | `
+ curl-x [$1]:80 http://$domain/$file-o /dev/null --connect-timeout 1 --max-time 10 > log.txt 2>&1
+fi
+cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep-v 'k\|M' >> speed.txt
+for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep k | sed 's/k//g"
 do
-	k=$i
-	k=$[$k*1024]
-	echo $k >> speed.txt
+k=$i
+k=$[$k*1024]
+ echo $k >> speed.txt
 done
-for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3d;$d' | grep M | `
+for i in `cat log.txt | tr '\r' '\n' | awk '{print $NF}' | sed '1,3 d;$d' | grep M | sed 's/M//g"
 do
-	i=$(echo | awk '{print '$i'*10 }')
-	M=$i
-	M=$[$M*1024*1024/10]
-	echo $M >> speed.txt
+ i=$(echo | awk '{print '$i'*10 }')
+M=$i
+M=$[$M*1024*1024/10]
+ echo $M >> speed.txt
 done
 max=0
 for i in `cat speed.txt`
 do
-	if [ $i -ge $max ]
-	then
-		max=$i
-	the fi
+ if [ $i-ge $max ]
+then
+max=$i
+fi
 done
-rm -rf log.txt speed.txt
+rm-rf log.txt speed.txt
 echo $max
 }
 
 function cloudflaretest(){
 while true
 do
-	while true
-	do
-		rm -rf rtt rtt.txt log.txt speed.txt
-		mkdir rtt
-		echo "Generating $ips"
-		unset temp
-		if [ "$ips" == "ipv4" ]
-		then
-			n=0
-			iplist=100
-			while true
-			do
-				for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort -n | awk '{print $2} NR=='$iplist' {exit}' | awk -F\. '{print $1"."$2"."$3}'`
-				do
-					temp[$n]=$(echo $i.$(($RANDOM%256)))
-					n=$[$n+1]
-				done
-				if [ $n -ge $iplist ]
-				then
-					break
-				the fi
-			done
-			while true
-			do
-				if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]
-				then
-					break
-				else
-					for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort -n | awk '{print $2} NR=='$[$iplist-$(echo $ {temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l)]' {exit}' | awk -F\. '{print $1"."$2". "$3}'`
-					do
-						temp[$n]=$(echo $i.$(($RANDOM%256)))
-						n=$[$n+1]
-					done
-				the fi
-			done
-		else
-			n=0
-			iplist=100
-			while true
-			do
-				for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort -n | awk '{print $2} NR=='$iplist' {exit}' | awk -F: '{print $1":"$2":"$3}'`
-				do
-					temp[$n]=$(echo $i:$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($ RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($ RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))))
-					n=$[$n+1]
-				done
-				if [ $n -ge $iplist ]
-				then
-					break
-				the fi
-			done
-			while true
-			do
-				if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]
-				then
-					break
-				else
-					for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort -n | awk '{print $2} NR=='$[$iplist-$(echo $ {temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l)]' {exit}' | awk -F: '{print $1":"$2":" $3}'`
-					do
-						temp[$n]=$(echo $i:$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($ RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($ RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))))
-						n=$[$n+1]
-					done
-				the fi
-			done
-		the fi
-		ipnum=$(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l)
-		if [ $tasknum == 0 ]
-		then
-			tasknum=1
-		the fi
-		if [ $ipnum -lt $tasknum ]
-		then
-			tasknum=$ipnum
-		the fi
-		n=1
-		for i in `echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u`
-		do
-			echo $i>>rtt/$n.txt
-			if [ $n == $tasknum ]
-			then
-				n=1
-			else
-				n=$[$n+1]
-			the fi
-		done
-		n=1
-		while true
-		do
-			if [ $tls == 1 ]
-			then
-				rtthttps $n &
-			else
-				rtthttp $n &
-			the fi
-			if [ $n == $tasknum ]
-			then
-				break
-			else
-				n=$[$n+1]
-			the fi
-		done
-		while true
-		do
-			n=$(ls rtt | grep txt | wc -l)
-			if [ $n -ne 0 ]
-			then
-				echo "$(date +'%H:%M:%S') Waiting for the end of the RTT test, the number of remaining processes is $n"
-			else
-				echo "$(date +'%H:%M:%S') RTT test completed"
-				break
-			the fi
-			sleep 1
-		done
-		n=$(ls rtt | grep log | wc -l)
-		if [ $n == 0 ]
-		then
-			echo "Currently all IPs have RTT packet loss"
-			echo "continue new RTT test"
-		else
-			cat rtt/*.log > rtt.txt
-			status=0
-			echo "IP address to be tested"
-			cat rtt.txt | sort | awk '{print $2" round trip delay "$1" ms"}'
-			for i in `cat rtt.txt | sort | awk '{print $1"_"$2}'`
-			do
-				avgms=$(echo $i | awk -F_ '{print $1}')
-				ip=$(echo $i | awk -F_ '{print $2}')
-				echo "testing $ip"
-				if [ $tls == 1 ]
-				then
-					max=$(speedtesthttps $ip)
-				else
-					max=$(speedtesthttp $ip)
-				the fi
-				if [ $max -ge $speed ]
-				then
-					status=1
-					anycast=$ip
-					max=$[$max/1024]
-					echo "$ip peak speed $max kB/s"
-					rm -rf rtt rtt.txt
-					break
-				else
-				max=$[$max/1024]
-				echo "$ip peak speed $max kB/s"
-				the fi
-			done
-			if [ $status == 1 ]
-			then
-				break
-			the fi
-		the fi
-	done
-		break
+ while true
+do
+ rm-rf rtt rtt.txt log.txt speed.txt
+ mkdir rtt
+ echo "is being generated $ips"
+ unset temp
+ if [ "$ips" == "ipv4" ]
+then
+n=0
+iplist=100
+ while true
+do
+ for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort-n | awk '{print $2} NR=='$iplist' {exit}' | awk-F\. '{print$1"."$ 2"."$ 3}"
+do
+ temp[$n]=$(echo $i.$ (($RANDOM%256)))
+n=$[$n+1]
+done
+ if [ $n-ge $iplist ]
+then
+break
+fi
+done
+ while true
+do
+ if [ $(echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u | wc-l) -ge $iplist ]
+then
+break
+else
+ for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort-n | awk '{print $2} NR=='$[$iplist-$(echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u | wc-l)]' {exit}' | awk-F\. '{print$1"."$ 2"."$ 3}"
+do
+ temp[$n]=$(echo $i.$ (($RANDOM%256)))
+n=$[$n+1]
+done
+fi
+done
+else
+n=0
+iplist=100
+ while true
+do
+ for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort-n | awk '{print $2} NR=='$iplist' {exit}' | awk-F: '{print$1":"$2":"$3}"
+do
+ temp[$n]=$(echo $i:$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '% x\n' $(($RANDOM*2+$RANDOM%2))))
+n=$[$n+1]
+done
+ if [ $n-ge $iplist ]
+then
+break
+fi
+done
+ while true
+do
+ if [ $(echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u | wc-l) -ge $iplist ]
+then
+break
+else
+ for i in `awk 'BEGIN{srand()} {print rand()"\t"$0}' $filename | sort-n | awk '{print $2} NR=='$[$iplist-$(echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u | wc-l)]' {exit}' | awk-F: '{print$1":"$2":"$3}"
+do
+ temp[$n]=$(echo $i:$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '% x\n' $(($RANDOM*2+$RANDOM%2))))
+n=$[$n+1]
+done
+fi
+done
+fi
+ ipnum=$(echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u | wc-l)
+ if [ $tasknum == 0 ]
+then
+tasknum=1
+fi
+ if [ $ipnum-lt $tasknum ]
+then
+tasknum=$ipnum
+fi
+n=1
+ for i in `echo ${temp[@]} | sed-e 's/ /\n/g' | sort-u`
+do
+ echo $i>>rtt/$n.txt
+ if [ $n == $tasknum ]
+then
+n=1
+else
+n=$[$n+1]
+fi
+done
+n=1
+ while true
+do
+ if [ $tls == 1 ]
+then
+ rtthttps $n &
+else
+ rtthttp $n &
+fi
+ if [ $n == $tasknum ]
+then
+break
+else
+n=$[$n+1]
+fi
+done
+ while true
+do
+ n=$(ls rtt | grep txt | wc-l)
+ if [ $n-ne 0 ]
+then
+ echo "$(date +'%H:%M:%S') wait RTT the end of the test,the remaining number of processes $n"
+else
+ echo "$(date +'%H:%M:%S') RTT test complete"
+break
+fi
+ sleep 1
+done
+ n=$(ls rtt | grep log | wc-l)
+ if [ $n == 0 ]
+then
+ echo "current all IP there RTT packet loss"
+ echo "to continue to the new RTT test"
+else
+ cat rtt/*. log > rtt.txt
+status=0
+ echo "test the speed of an IP address"
+ cat rtt.txt | sort | awk '{print $2" round trip delay "$1" milliseconds"}'
+ for i in `cat rtt.txt | sort | awk '{print $1"_"$2}"
+do
+ avgms=$(echo $i | awk-F_ '{print $1}')
+ ip=$(echo $i | awk-F_ '{print $2}')
+ echo "now testing $ip"
+ if [ $tls == 1 ]
+then
+ max=$(speedtesthttps $ip)
+else
+ max=$(speedtesthttp $ip)
+fi
+ if [ $max-ge $speed ]
+then
+status=1
+anycast=$ip
+max=$[$max/1024]
+ echo "$ip Peak Velocity $max kB/s"
+ rm-rf rtt rtt.txt
+break
+else
+max=$[$max/1024]
+ echo "$ip Peak Velocity $max kB/s"
+fi
+done
+ if [ $status == 1 ]
+then
+break
+fi
+fi
+done
+break
 done
 }
 
 function singlehttps(){
-read -p "Please enter the IP that needs to be tested: " ip
-read -p "Please enter the port that needs to be tested (default 443): " port
+read-p "please enter the required speed test IP:" ip
+read-p "please enter the required speed of the port(default 443):" port
 if [ -z "$ip" ]
 then
-	echo "No IP entered"
-the fi
+ echo "do not enter IP"
+fi
 if [ -z "$port" ]
 then
-	port=443
-the fi
-echo "Testing $ip port $port"
-speed_download=$(curl --resolve $domain:$port:$ip https://$domain:$port/$file -o /dev/null --connect-timeout 5 --max-time 15 -w %{ speed_download} | awk -F\. '{printf ("%d\n",$1/1024)}')
+port=443
+fi
+echo "are Velocimetry $ip-port $port"
+speed_download=$(curl --resolve $domain:$port:$ip: https://$domain:$port/$file-o /dev/null --connect-timeout 5 --max-time 15-w %{speed_download} | awk-F\. '{printf ("%d\n",$1/1024)}')
 }
 
 function singlehttp(){
-read -p "Please enter the IP that needs to be tested: " ip
-read -p "Please enter the port that needs to be tested (default 80): " port
+read-p "please enter the required speed test IP:" ip
+read-p "please enter the required speed of the port(default 80):" port
 if [ -z "$ip" ]
 then
-	echo "No IP entered"
-the fi
+ echo "do not enter IP"
+fi
 if [ -z "$port" ]
 then
-	port=80
-the fi
-echo "Testing $ip port $port"
-if [ $(echo $ip | grep : | wc -l) == 0 ]
+port=80
+fi
+echo "are Velocimetry $ip-port $port"
+if [ $(echo $ip | grep : | wc-l) == 0 ]
 then
-	speed_download=$(curl -x $ip:$port http://$domain:$port/$file -o /dev/null --connect-timeout 5 --max-time 15 -w %{speed_download} | awk -F\. '{printf ("%d\n",$1/1024)}')
+ speed_download=$(curl-x $ip:$port http://$domain:$port/$file-o /dev/null --connect-timeout 5 --max-time 15-w %{speed_download} | awk-F\. '{printf ("%d\n",$1/1024)}')
 else
-	speed_download=$(curl -x [$ip]:$port http://$domain:$port/$file -o /dev/null --connect-timeout 5 --max-time 15 -w %{speed_download} | awk -F\. '{printf ("%d\n",$1/1024)}')
-the fi
+ speed_download=$(curl-x [$ip]:$port http://$domain:$port/$file-o /dev/null --connect-timeout 5 --max-time 15-w %{speed_download} | awk-F\. '{printf ("%d\n",$1/1024)}')
+fi
 }
 
 function datacheck(){
 clear
-echo "If the download of the following files fails, you can manually visit the URL to download and save them to the same directory"
+echo "if these following files failed to download,you can manually visit the URL to download and save to the same directory"
 echo "https://www.baipiao.eu.org/cloudflare/colo save as colo.txt"
 echo "https://www.baipiao.eu.org/cloudflare/url save as url.txt"
 echo "https://www.baipiao.eu.org/cloudflare/ips-v4 save as ips-v4.txt"
 echo "https://www.baipiao.eu.org/cloudflare/ips-v6 save as ips-v6.txt"
 while true
 do
-	if [ ! -f "colo.txt" ]
-	then
-		echo "Download data center information colo.txt from server"
-		curl --retry 2 -s https://www.baipiao.eu.org/cloudflare/colo -o colo.txt
-	elif [ ! -f "url.txt" ]
-	then
-		echo "Download the speed test file address url.txt from the server"
-		curl --retry 2 -s https://www.baipiao.eu.org/cloudflare/url -o url.txt
-	elif [ ! -f "ips-v4.txt" ]
-	then
-		echo "Download IPV4 data ips-v4.txt from server"
-		curl --retry 2 -s https://www.baipiao.eu.org/cloudflare/ips-v4 -o ips-v4.txt
-	elif [ ! -f "ips-v6.txt" ]
-	then
-		echo "Download IPV6 data ips-v6.txt from server"
-		curl --retry 2 -s https://www.baipiao.eu.org/cloudflare/ips-v6 -o ips-v6.txt
-	else
-		break
-	the fi
+ if [ ! -f "colo.txt" ]
+then
+ echo "downloaded from the server to the data center information colo.txt"
+ curl --retry 2-s https://www.baipiao.eu.org/cloudflare/colo -o colo.txt
+ elif [ ! -f "url.txt" ]
+then
+ echo "server to download from speed file address url.txt"
+ curl --retry 2-s https://www.baipiao.eu.org/cloudflare/url -o url.txt
+ elif [ ! -f "ips-v4.txt" ]
+then
+ echo "from a server to download the IPV4 data ips-v4.txt"
+ curl --retry 2-s https://www.baipiao.eu.org/cloudflare/ips-v4 -o ips-v4.txt
+ elif [ ! -f "ips-v6.txt" ]
+then
+ echo "downloaded from the server to the IPV6 data ips-v6.txt"
+ curl --retry 2-s https://www.baipiao.eu.org/cloudflare/ips-v6 -o ips-v6.txt
+else
+break
+fi
 done
 }
 datacheck
-url=$(sed -n '1p' url.txt)
-domain=$(echo $url | cut -f 1 -d'/')
-file=$(echo $url | cut -f 2- -d'/')
+url=$(sed-n '1p' url.txt)
+domain=$(echo $url | cut-f 1-d'/')
+file=$(echo $url | cut-f 2- -d'/')
 clear
 while true
 do
-	echo "1. IPV4 preferred (TLS)"
-	echo "2. IPV4 preferred"
-	echo "3. IPV6 preferred (TLS)"
-	echo "4. IPV6 preferred"
-	echo "5. Single IP speed test (TLS)"
-	echo "6. Single IP speed test"
-	echo "7. Clear cache"
-	echo "8. Update data"
-	echo -e "0. exit\n"
-	read -p "Please select the menu (default 0): " menu
-	if [ -z "$menu" ]
-	then
-		menu=0
-	the fi
-	if [ $menu == 0 ]
-	then
-		clear
-		echo "exit successful"
-		break
-	the fi
-	if [ $menu == 1 ]
-	then
-		ips=ipv4
-		filename=ips-v4.txt
-		tls=1
-		bettercloudflareip
-		break
-	the fi
-	if [ $menu == 2 ]
-	then
-		ips=ipv4
-		filename=ips-v4.txt
-		tls=0
-		bettercloudflareip
-		break
-	the fi
-	if [ $menu == 3 ]
-	then
-		ips=ipv6
-		filename=ips-v6.txt
-		tls=1
-		bettercloudflareip
-		break
-	the fi
-	if [ $menu == 4 ]
-	then
-		ips=ipv6
-		filename=ips-v6.txt
-		tls=0
-		bettercloudflareip
-		break
-	the fi
-	if [ $menu == 5 ]
-	then
-		singlehttps
-		clear
-		echo "$ip average speed $speed_download kB/s"
-	the fi
-	if [ $menu == 6 ]
-	then
-		single http
-		clear
-		echo "$ip average speed $speed_download kB/s"
-	the fi
-	if [ $menu == 7 ]
-	then
-		rm -rf rtt rtt.txt log.txt speed.txt
-		clear
-		echo "Cache has been cleared"
-	the fi
-	if [ $menu == 8 ]
-	then
-		rm -rf colo.txt url.txt ips-v4.txt ips-v6.txt
-		datacheck
-		clear
-	the fi
+ echo "1. IPV4 preferred(TLS)"
+ echo "2. IPV4 preferred"
+ echo "3. IPV6 preferred(TLS)"
+ echo "4. IPV6 preferred"
+ echo "5. Single IP Velocimetry(TLS)"
+ echo "6. Single IP speed"
+ echo "7. Empty the cache"
+ echo "8. Update data"
+ echo-e "0. Exit\n"
+ read-p "please select menu - (default 0):" menu
+ if [ -z "$menu" ]
+then
+menu=0
+fi
+ if [ $menu == 0 ]
+then
+clear
+ echo "successful exit"
+break
+fi
+ if [ $menu == 1 ]
+then
+ips=ipv4
+filename=ips-v4.txt
+tls=1
+bettercloudflareip
+break
+fi
+ if [ $menu == 2 ]
+then
+ips=ipv4
+filename=ips-v4.txt
+tls=0
+bettercloudflareip
+break
+fi
+ if [ $menu == 3 ]
+then
+ips=ipv6
+filename=ips-v6.txt
+tls=1
+bettercloudflareip
+break
+fi
+ if [ $menu == 4 ]
+then
+ips=ipv6
+filename=ips-v6.txt
+tls=0
+bettercloudflareip
+break
+fi
+ if [ $menu == 5 ]
+then
+singlehttps
+clear
+ echo "$ip an average speed of $speed_download kB/s"
+fi
+ if [ $menu == 6 ]
+then
+singlehttp
+clear
+ echo "$ip an average speed of $speed_download kB/s"
+fi
+ if [ $menu == 7 ]
+then
+ rm-rf rtt rtt.txt log.txt speed.txt
+clear
+ echo "the cache has been emptied"
+fi
+ if [ $menu == 8 ]
+then
+ rm-rf colo.txt url.txt ips-v4.txt ips-v6.txt
+datacheck
+clear
+fi
 done
+ 
