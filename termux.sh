@@ -35,12 +35,12 @@ check_dependencies() {
 
 # Build
 build() {
-    if command -v warp &> /dev/null || command -v usef &> /dev/null; then
-        echo -e "${green}Warp is already installed.${rest}"
+    if command -v vpn &> /dev/null || command -v falconer &> /dev/null; then
+        echo -e "${green}vpn is already installed.${rest}"
         return
     fi
 
-    echo -e "${green}Installing Warp...${rest}"
+    echo -e "${green}Installing vpn...${rest}"
     pkg update -y && pkg upgrade -y
     check_dependencies_build
 
@@ -48,9 +48,8 @@ build() {
         cd wireguard-go &&
         go build main.go &&
         chmod +x main &&
-        cp main "$PREFIX/bin/usef" &&
-        cp main "$PREFIX/bin/warp"; then
-        echo -e "${green}Warp installed successfully.${rest}"
+        cp main "$PREFIX/bin/vpn"; then
+        echo -e "${green}vpn installed successfully.${rest}"
     else
         echo -e "${red}Error installing WireGuard VPN.${rest}"
     fi
@@ -58,12 +57,12 @@ build() {
 
 # Install
 install() {
-    if command -v warp &> /dev/null || command -v usef &> /dev/null; then
-        echo -e "${green}Warp is already installed.${rest}"
+    if command -v vpn &> /dev/null || command -v falconer &> /dev/null; then
+        echo -e "${green}vpn is already installed.${rest}"
         return
     fi
 
-    echo -e "${green}Installing Warp...${rest}"
+    echo -e "${green}Installing vpn...${rest}"
     pkg update -y && pkg upgrade -y
     pacman -Syu openssh = apt update; apt full-upgrade -y; apt install -y openssh
     check_dependencies
@@ -71,25 +70,24 @@ install() {
     if wget https://github.com/bepass-org/wireguard-go/releases/download/v0.0.15-alpha/warp-android-arm64.918ea4.zip &&
         unzip warp-android-arm64.918ea4.zip &&
         chmod +x warp &&
-        cp warp "$PREFIX/bin/usef" &&
-        cp warp "$PREFIX/bin/warp"; then
+        cp warp "$PREFIX/bin/vpn"; then
         rm "README.md" "LICENSE" "warp-android-arm64.918ea4.zip"
         echo "================================================"
-        echo -e "${green}Warp installed successfully.${rest}"
+        echo -e "${green}vpn installed successfully.${rest}"
         socks
     else
-        echo -e "${red}Error installing Warp.${rest}"
+        echo -e "${red}Error installing vpn.${rest}"
     fi
 }
 
 # Install arm
 install_arm() {
-    if command -v warp &> /dev/null || command -v usef &> /dev/null; then
-        echo -e "${green}Warp is already installed.${rest}"
+    if command -v vpn &> /dev/null || command -v falconer &> /dev/null; then
+        echo -e "${green}vpn is already installed.${rest}"
         return
     fi
 
-    echo -e "${green}Installing Warp...${rest}"
+    echo -e "${green}Installing vpn...${rest}"
     pkg update -y && pkg upgrade -y
     pacman -Syu openssh = apt update; apt full-upgrade -y; apt install -y openssh
     check_dependencies
@@ -109,14 +107,13 @@ install_arm() {
     if wget "$WARP_URL" &&
         unzip "warp-linux-$ARCH.918ea4.zip" &&
         chmod +x warp &&
-        cp warp "$PREFIX/bin/usef" &&
-        cp warp "$PREFIX/bin/warp"; then
+       cp warp "$PREFIX/bin/vpn"; then
         rm "README.md" "LICENSE" "warp-linux-$ARCH.918ea4.zip"
         echo "================================================"
-        echo -e "${green}Warp installed successfully.${rest}"
+        echo -e "${green}vpn installed successfully.${rest}"
         socks
     else
-        echo -e "${red}Error installing Warp.${rest}"
+        echo -e "${red}Error installing vpn.${rest}"
     fi
 }
 
@@ -125,11 +122,11 @@ socks() {
    echo ""
    echo -e "${yellow}Copy this Config to ${purple}V2ray${green} Or ${purple}Nekobox ${yellow}and Exclude Termux${rest}"
    echo "================================================"
-   echo -e "${green}socks://Og==@127.0.0.1:8086#warp_(usef)${rest}"
+   echo -e "${green}socks://Og==@127.0.0.1:8086#falconer${rest}"
    echo "or"
    echo -e "${green}Manually create a SOCKS configuration with IP ${purple}127.0.0.1 ${green}and port${purple} 8086..${rest}"
    echo "================================================"
-   echo -e "${yellow}To run again, type:${green} warp ${rest}or${green} usef ${rest}or${green} ./warp${rest}"
+   echo -e "${yellow}To run again, type:${green} vpn ${rest}"
    echo "================================================"
    echo -e "${green} If you get a 'Bad address' error, run ${yellow}[Arm]${rest}"
    echo ""
@@ -137,11 +134,11 @@ socks() {
 
 #Uninstall
 uninstall() {
-    warp="$PREFIX/bin/warp"
+    warp="$PREFIX/bin/vpn"
     directory="/data/data/com.termux/files/home/wireguard-go"
     home="/data/data/com.termux/files/home"
     if [ -f "$warp" ]; then
-        rm -rf "$directory" "$PREFIX/bin/usef" "wa.py" "$PREFIX/bin/warp" "$home/wgcf-profile.ini" "$home/warp" "$home/stuff" "$home/wgcf-identity.json" > /dev/null 2>&1
+        rm -rf "$directory" "$PREFIX/bin/vpn" "wa.py" "$PREFIX/bin/vpn" "$home/wgcf-profile.ini" "$home/vpn" "$home/stuff" "$home/wgcf-identity.json" > /dev/null 2>&1
         echo -e "${red}Uninstallation completed.${rest}"
     else
         echo -e "${yellow} ____________________________________${rest}"
@@ -166,15 +163,15 @@ warp_plus() {
 menu() {
     clear
     echo -e "${purple}*********************************${rest}"
-    echo -e "${cyan}1)${rest} ${green}Install Warp (vpn)${purple}           * ${rest}"
+    echo -e "${cyan}1)${rest} ${green}Install vpn${purple}           * ${rest}"
     echo -e "                              ${purple}  * ${rest}"
-    echo -e "${cyan}2)${rest} ${green}Install Warp (vpn) [${yellow}Arm${green}] ${purple}    * ${rest}"
+    echo -e "${cyan}2)${rest} ${green}Install vpn [${yellow}Arm${green}] ${purple}    * ${rest}"
     echo -e "                              ${purple}  * ${rest}"
     echo -e "${cyan}3)${rest} ${green}Uninstall${rest}${purple}                    * ${rest}"
     echo -e "                              ${purple}  * ${rest}"
-    echo -e "${cyan}4)${rest} ${green}Warp to ${purple}Warp plus${green} [${yellow}Free GB${green}]${rest}${purple}  * ${rest}"
+    echo -e "${cyan}4)${rest} ${green}vpn to ${purple}vpn plus${green} [${yellow}Free GB${green}]${rest}${purple}  * ${rest}"
     echo -e "                              ${purple}  * ${rest}"
-    echo -e "${cyan}5)${rest} ${green}Build (warp)${purple}                 * ${rest}"
+    echo -e "${cyan}5)${rest} ${green}Build (vpn)${purple}                 * ${rest}"
     echo -e "                              ${purple}  * ${rest}"
     echo -e "${red}0)${rest} ${green}Exit                         ${purple}* ${rest}"
     echo -e "${purple}*********************************${rest}"
@@ -187,11 +184,11 @@ read -p "Please enter your selection [0-5]:" choice
 case "$choice" in
    1)
         install
-        warp
+        vpn
         ;;
     2)
         install_arm
-        warp
+        vpn
         ;;
     3)
         uninstall
